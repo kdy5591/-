@@ -1,18 +1,18 @@
 
 import React, { useState, useEffect } from 'react';
-import { Project } from './types';
-import { INITIAL_PROJECTS } from './constants';
-import Navbar from './components/Navbar';
-import Hero from './components/Hero';
-import FeaturedWorks from './components/FeaturedWorks';
-import TrustStats from './components/TrustStats';
-import PortfolioGrid from './components/PortfolioGrid';
-import CaseStudyDetail from './components/CaseStudyDetail';
-import Process from './components/Process';
-import About from './components/About';
-import Contact from './components/Contact';
-import Footer from './components/Footer';
-import Admin from './components/Admin';
+import { Project } from './types.ts';
+import { INITIAL_PROJECTS } from './constants.tsx';
+import Navbar from './components/Navbar.tsx';
+import Hero from './components/Hero.tsx';
+import FeaturedWorks from './components/FeaturedWorks.tsx';
+import TrustStats from './components/TrustStats.tsx';
+import PortfolioGrid from './components/PortfolioGrid.tsx';
+import CaseStudyDetail from './components/CaseStudyDetail.tsx';
+import Process from './components/Process.tsx';
+import About from './components/About.tsx';
+import Contact from './components/Contact.tsx';
+import Footer from './components/Footer.tsx';
+import Admin from './components/Admin.tsx';
 
 const App: React.FC = () => {
   const [projects, setProjects] = useState<Project[]>([]);
@@ -41,11 +41,9 @@ const App: React.FC = () => {
   };
 
   const handleNavClick = (sectionId: string) => {
-    // 오버레이가 열려있다면 닫기
     setSelectedProjectId(null);
     setIsAdminOpen(false);
     
-    // 약간의 지연 후 스크롤 (오버레이가 닫히는 시간을 고려)
     setTimeout(() => {
       const element = document.getElementById(sectionId);
       if (element) {
@@ -76,7 +74,6 @@ const App: React.FC = () => {
 
       <Footer onNavClick={handleNavClick} />
 
-      {/* Overlays */}
       {selectedProject && (
         <CaseStudyDetail 
           project={selectedProject} 
@@ -92,7 +89,6 @@ const App: React.FC = () => {
         />
       )}
 
-      {/* Global Fixed CTA */}
       <div className="fixed bottom-8 right-8 z-40 flex flex-col gap-4">
         <button 
           onClick={() => handleNavClick('contact')}

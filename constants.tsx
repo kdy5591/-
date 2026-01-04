@@ -1,5 +1,5 @@
 
-import { Project, ProcessStep } from './types';
+import { Project, ProcessStep } from './types.ts';
 
 export const INITIAL_PROJECTS: Project[] = [
   {

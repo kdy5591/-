@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { Project } from '../types';
+import { Project } from '../types.ts';
 
 interface AdminProps {
   projects: Project[];
@@ -14,7 +14,6 @@ const Admin: React.FC<AdminProps> = ({ projects, onUpdate, onClose }) => {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [formData, setFormData] = useState<Partial<Project>>({});
 
-  // File to Base64 helper
   const toBase64 = (file: File): Promise<string> => 
     new Promise((resolve, reject) => {
       const reader = new FileReader();
@@ -32,7 +31,6 @@ const Admin: React.FC<AdminProps> = ({ projects, onUpdate, onClose }) => {
 
   const handleMultipleFilesChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files) {
-      // Fix: Cast Array.from(e.target.files) to File[] to resolve TS 'unknown' error
       const filesArray = Array.from(e.target.files) as File[];
       const base64s = await Promise.all(filesArray.map(file => toBase64(file)));
       setFormData({ 
@@ -135,7 +133,6 @@ const Admin: React.FC<AdminProps> = ({ projects, onUpdate, onClose }) => {
 
         {editingId ? (
           <div className="bg-gray-50 p-8 rounded-3xl border border-black/5 space-y-10">
-            {/* Basic Info */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
               <div className="space-y-2">
                 <label className="text-xs font-bold uppercase tracking-widest text-gray-400">Brand Name</label>
@@ -155,12 +152,9 @@ const Admin: React.FC<AdminProps> = ({ projects, onUpdate, onClose }) => {
               </div>
             </div>
 
-            {/* Media Upload Section */}
             <div className="space-y-8">
               <h3 className="text-xl font-serif border-b pb-2">Media & Images</h3>
-              
               <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                {/* Thumbnail */}
                 <div className="space-y-4">
                   <label className="text-xs font-bold uppercase tracking-widest text-gray-400 block">Thumbnail Image</label>
                   <div className="aspect-square bg-white border border-dashed border-black/20 rounded-2xl overflow-hidden flex items-center justify-center relative group">
@@ -176,10 +170,7 @@ const Admin: React.FC<AdminProps> = ({ projects, onUpdate, onClose }) => {
                       className="absolute inset-0 opacity-0 cursor-pointer"
                     />
                   </div>
-                  <p className="text-[10px] text-gray-400 italic text-center">Click to upload main card image</p>
                 </div>
-
-                {/* Sketch */}
                 <div className="space-y-4">
                   <label className="text-xs font-bold uppercase tracking-widest text-gray-400 block">Process/Sketch Image</label>
                   <div className="aspect-square bg-white border border-dashed border-black/20 rounded-2xl overflow-hidden flex items-center justify-center relative">
@@ -195,11 +186,8 @@ const Admin: React.FC<AdminProps> = ({ projects, onUpdate, onClose }) => {
                       className="absolute inset-0 opacity-0 cursor-pointer"
                     />
                   </div>
-                  <p className="text-[10px] text-gray-400 italic text-center">Click to upload design process image</p>
                 </div>
               </div>
-
-              {/* Multiple Mockups */}
               <div className="space-y-4">
                 <label className="text-xs font-bold uppercase tracking-widest text-gray-400 block">Case Study Images (Multiple)</label>
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
@@ -225,11 +213,9 @@ const Admin: React.FC<AdminProps> = ({ projects, onUpdate, onClose }) => {
                     />
                   </div>
                 </div>
-                <p className="text-[10px] text-gray-400 italic">You can upload multiple high-resolution mockups for the case study.</p>
               </div>
             </div>
 
-            {/* Description Fields */}
             <div className="space-y-6">
               <h3 className="text-xl font-serif border-b pb-2">Content Detail</h3>
               <textarea 
@@ -304,11 +290,6 @@ const Admin: React.FC<AdminProps> = ({ projects, onUpdate, onClose }) => {
                 </div>
               </div>
             ))}
-            {projects.length === 0 && (
-              <div className="text-center py-20 bg-gray-50 rounded-3xl border border-dashed border-black/10">
-                <p className="text-gray-400">등록된 프로젝트가 없습니다.</p>
-              </div>
-            )}
           </div>
         )}
       </div>
