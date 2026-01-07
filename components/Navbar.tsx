@@ -1,45 +1,64 @@
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
+import { motion } from 'framer-motion';
 
 interface NavbarProps {
-  onAdminClick: () => void;
-  onHomeClick: () => void;
-  onNavClick: (id: string) => void;
+  onNavigateHome: () => void;
+  onScrollToSection: (id: string) => void;
 }
 
-const Navbar: React.FC<NavbarProps> = ({ onAdminClick, onHomeClick, onNavClick }) => {
+export const Navbar: React.FC<NavbarProps> = ({ onNavigateHome, onScrollToSection }) => {
+  const [isScrolled, setIsScrolled] = useState(false);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      setIsScrolled(window.scrollY > 50);
+    };
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
   return (
-    <nav className="fixed top-0 left-0 w-full z-50 glass-morphism border-b border-black/5">
-      <div className="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
-        <button 
-          onClick={onHomeClick}
-          className="flex items-center gap-2 hover:opacity-70 transition-opacity"
-        >
-          <div className="w-8 h-8 bg-black rounded-sm flex items-center justify-center">
-            <span className="text-white font-serif text-lg">D</span>
-          </div>
-          <span className="text-xl font-bold tracking-tighter text-[#0055FF]">도동로고</span>
+    <nav className={`fixed top-0 left-0 w-full z-50 transition-all duration-700 ${isScrolled ? 'bg-ivory/95 backdrop-blur-lg py-4 shadow-sm' : 'bg-transparent py-10'}`}>
+      <div className="max-w-7xl mx-auto px-8 flex justify-between items-center">
+        {/* Left: Brand Logo */}
+        <button onClick={onNavigateHome} className="text-2xl font-serif tracking-tight text-olive font-bold hover:opacity-70 transition-opacity">
+          뚬뚜미
         </button>
-        
-        <div className="hidden md:flex items-center gap-8 text-sm font-medium">
-          <button onClick={() => onNavClick('works')} className="hover:text-gray-500 transition-colors uppercase">WORKS</button>
-          <button onClick={() => onNavClick('process')} className="hover:text-gray-500 transition-colors uppercase">PROCESS</button>
-          <button onClick={() => onNavClick('about')} className="hover:text-gray-500 transition-colors uppercase">ABOUT</button>
-          <button onClick={() => onNavClick('contact')} className="hover:text-gray-500 transition-colors uppercase">CONTACT</button>
-          <button 
-            onClick={onAdminClick}
-            className="ml-4 px-4 py-2 border border-black/10 rounded-full hover:bg-black hover:text-white transition-all text-xs font-bold"
-          >
-            ADMIN
+
+        {/* Center: Navigation (Hidden on mobile) */}
+        <div className="flex space-x-12 items-center hidden lg:flex text-[18px] tracking-[0.2em] uppercase font-medium text-charcoal/90">
+          <button onClick={() => onScrollToSection('sumi')} className="hover:text-olive transition-colors relative group">
+            이수미
+            <span className="absolute -bottom-2 left-0 w-0 h-[2px] bg-olive transition-all group-hover:w-full"></span>
+          </button>
+          <button onClick={() => onScrollToSection('ttumttumi')} className="hover:text-olive transition-colors relative group">
+            뚬뚜미
+            <span className="absolute -bottom-2 left-0 w-0 h-[2px] bg-olive transition-all group-hover:w-full"></span>
+          </button>
+          <button onClick={() => onScrollToSection('mindungi')} className="hover:text-olive transition-colors relative group">
+            민둥이
+            <span className="absolute -bottom-2 left-0 w-0 h-[2px] bg-olive transition-all group-hover:w-full"></span>
           </button>
         </div>
 
-        <button className="md:hidden">
-          <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6h16M4 12h16m-7 6h7"></path></svg>
-        </button>
+        {/* Right: Actions */}
+        <div className="flex items-center">
+          <a 
+            href="https://www.instagram.com/leessumi/" 
+            target="_blank" 
+            rel="noopener noreferrer" 
+            className="group flex items-center space-x-2.5 text-[12px] tracking-[0.2em] uppercase font-medium text-charcoal/80 hover:text-olive transition-all"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+              <rect x="2" y="2" width="20" height="20" rx="5" ry="5"></rect>
+              <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path>
+              <line x1="17.5" y1="6.5" x2="17.51" y2="6.5"></line>
+            </svg>
+            <span className="hidden sm:inline">Instagram</span>
+          </a>
+        </div>
       </div>
     </nav>
   );
 };
-
-export default Navbar;

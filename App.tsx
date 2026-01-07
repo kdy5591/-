@@ -1,103 +1,150 @@
 
-import React, { useState, useEffect } from 'react';
-import { Project } from './types.ts';
-import { INITIAL_PROJECTS } from './constants.tsx';
-import Navbar from './components/Navbar.tsx';
-import Hero from './components/Hero.tsx';
-import FeaturedWorks from './components/FeaturedWorks.tsx';
-import TrustStats from './components/TrustStats.tsx';
-import PortfolioGrid from './components/PortfolioGrid.tsx';
-import CaseStudyDetail from './components/CaseStudyDetail.tsx';
-import Process from './components/Process.tsx';
-import About from './components/About.tsx';
-import Contact from './components/Contact.tsx';
-import Footer from './components/Footer.tsx';
-import Admin from './components/Admin.tsx';
+import React, { useEffect, useState } from 'react';
+import { Navbar } from './components/Navbar';
+import { Hero } from './components/Hero';
+import { About } from './components/About';
+import { ShowcaseSection } from './components/ShowcaseSection';
+import { Contact } from './components/Contact';
+import { Footer } from './components/Footer';
+import { Admin } from './components/Admin';
+import { motion, AnimatePresence } from 'framer-motion';
 
 const App: React.FC = () => {
-  const [projects, setProjects] = useState<Project[]>([]);
-  const [selectedProjectId, setSelectedProjectId] = useState<string | null>(null);
-  const [isAdminOpen, setIsAdminOpen] = useState(false);
+  const [isLoaded, setIsLoaded] = useState(false);
+  const [currentView, setCurrentView] = useState<'home' | 'admin'>('home');
+  
+  // Centralized site content for editing
+  const [content, setContent] = useState({
+    heroTitle: "뚬뚜미의 뽈따구는\n과학이다.",
+    heroSlogan: "Absolute Aesthetic Precision",
+    heroDescription: "완벽한 균형과 미학적 완성도를 추구하는\n뚬뚜미만의 독보적인 감각을 경험해보세요.",
+    heroImages: ["https://images.unsplash.com/photo-1490312278390-ab64016e0aa9?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920&q=80"],
+    aboutLabel: "OUR PHILOSOPHY",
+    aboutTitle: "불필요한 것은 덜어내고,\n자연의 가치를 담습니다.",
+    aboutPhilosophy: "민둥이의 뽈따구는 과학이다. 민둥이의 뽈따구는 백만불짜리이다.",
+    aboutFeature1Title: "Zero Plastic",
+    aboutFeature1Desc: "모든 포장재는 생분해성 소재를 사용합니다.",
+    aboutFeature2Title: "Minimal Design",
+    aboutFeature2Desc: "감각적인 미학을 유지하는 미니멀리즘 디자인.",
+    aboutImages: ["https://images.unsplash.com/photo-1591336323062-8758837e283d?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80"],
+    // Showcase Section Images
+    sumiImage: "https://images.unsplash.com/photo-1513519245088-0e12902e5a38?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920&q=80",
+    ttumImage: "https://images.unsplash.com/photo-1554995207-c18c203602cb?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920&q=80",
+    minImage: "https://images.unsplash.com/photo-1505691938895-1758d7eaa511?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920&q=80",
+    contactEmail: "hello@ttumttumi.com"
+  });
 
   useEffect(() => {
-    const savedProjects = localStorage.getItem('vls_projects');
-    if (savedProjects) {
-      setProjects(JSON.parse(savedProjects));
-    } else {
-      setProjects(INITIAL_PROJECTS);
-      localStorage.setItem('vls_projects', JSON.stringify(INITIAL_PROJECTS));
-    }
+    setIsLoaded(true);
+    const handleHash = () => {
+      if (window.location.hash === '#admin') setCurrentView('admin');
+      else setCurrentView('home');
+    };
+    window.addEventListener('hashchange', handleHash);
+    handleHash();
+    return () => window.removeEventListener('hashchange', handleHash);
   }, []);
 
-  const handleUpdateProjects = (updatedProjects: Project[]) => {
-    setProjects(updatedProjects);
-    localStorage.setItem('vls_projects', JSON.stringify(updatedProjects));
-  };
-
-  const handleHomeClick = () => {
-    setSelectedProjectId(null);
-    setIsAdminOpen(false);
+  const navigateTo = (view: 'home' | 'admin') => {
+    window.location.hash = view === 'admin' ? 'admin' : '';
+    setCurrentView(view);
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
-  const handleNavClick = (sectionId: string) => {
-    setSelectedProjectId(null);
-    setIsAdminOpen(false);
-    
-    setTimeout(() => {
-      const element = document.getElementById(sectionId);
-      if (element) {
-        element.scrollIntoView({ behavior: 'smooth' });
-      }
-    }, 100);
+  const scrollToSection = (id: string) => {
+    if (currentView !== 'home') {
+      navigateTo('home');
+      // Wait for navigation before scrolling
+      setTimeout(() => {
+        const el = document.getElementById(id);
+        if (el) el.scrollIntoView({ behavior: 'smooth' });
+      }, 100);
+    } else {
+      const el = document.getElementById(id);
+      if (el) el.scrollIntoView({ behavior: 'smooth' });
+    }
   };
 
-  const selectedProject = projects.find(p => p.id === selectedProjectId);
-
   return (
-    <div className="relative min-h-screen bg-[#FAFAFA] text-[#1A1A1A]">
+    <div className="min-h-screen font-sans selection:bg-olive selection:text-white">
+      <AnimatePresence>
+        {!isLoaded && (
+          <motion.div 
+            initial={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[100] bg-ivory flex items-center justify-center"
+          >
+            <motion.div 
+              initial={{ opacity: 0, letterSpacing: '0.5em' }}
+              animate={{ opacity: 1, letterSpacing: '0.2em' }}
+              transition={{ duration: 1.5, ease: "easeOut" }}
+              className="text-olive font-serif text-4xl"
+            >
+              뚬뚜미
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       <Navbar 
-        onAdminClick={() => setIsAdminOpen(true)} 
-        onHomeClick={handleHomeClick} 
-        onNavClick={handleNavClick}
+        onNavigateHome={() => navigateTo('home')} 
+        onScrollToSection={scrollToSection}
       />
       
-      <main className="pt-20">
-        <Hero />
-        <FeaturedWorks projects={projects.filter(p => p.isFeatured)} onProjectClick={setSelectedProjectId} />
-        <TrustStats />
-        <PortfolioGrid projects={projects} onProjectClick={setSelectedProjectId} />
-        <Process />
-        <About />
-        <Contact />
+      <main>
+        {currentView === 'home' ? (
+          <>
+            <Hero 
+              title={content.heroTitle} 
+              slogan={content.heroSlogan} 
+              description={content.heroDescription} 
+              images={content.heroImages}
+            />
+            <About 
+              label={content.aboutLabel}
+              title={content.aboutTitle} 
+              philosophy={content.aboutPhilosophy} 
+              feature1Title={content.aboutFeature1Title}
+              feature1Desc={content.aboutFeature1Desc}
+              feature2Title={content.aboutFeature2Title}
+              feature2Desc={content.aboutFeature2Desc}
+              images={content.aboutImages}
+            />
+            
+            <ShowcaseSection 
+              id="sumi"
+              image={content.sumiImage}
+              title="Lee Sumi"
+              subtitle="The Muse"
+            />
+            <ShowcaseSection 
+              id="ttumttumi"
+              image={content.ttumImage}
+              title="Ttumttumi"
+              subtitle="The Essence"
+              reverse
+            />
+            <ShowcaseSection 
+              id="mindungi"
+              image={content.minImage}
+              title="Mindungi"
+              subtitle="The Pure"
+            />
+
+            <Contact 
+              email={content.contactEmail} 
+            />
+          </>
+        ) : (
+          <Admin 
+            content={content} 
+            setContent={setContent} 
+            onClose={() => navigateTo('home')} 
+          />
+        )}
       </main>
 
-      <Footer onNavClick={handleNavClick} />
-
-      {selectedProject && (
-        <CaseStudyDetail 
-          project={selectedProject} 
-          onClose={() => setSelectedProjectId(null)} 
-        />
-      )}
-
-      {isAdminOpen && (
-        <Admin 
-          projects={projects} 
-          onUpdate={handleUpdateProjects} 
-          onClose={() => setIsAdminOpen(false)} 
-        />
-      )}
-
-      <div className="fixed bottom-8 right-8 z-40 flex flex-col gap-4">
-        <button 
-          onClick={() => handleNavClick('contact')}
-          className="bg-[#1A1A1A] text-white px-6 py-4 rounded-full shadow-2xl hover:scale-105 transition-all font-medium flex items-center gap-2"
-        >
-          <span>프로젝트 문의하기</span>
-          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
-        </button>
-      </div>
+      <Footer onAdminClick={() => navigateTo('admin')} />
     </div>
   );
 };

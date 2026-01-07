@@ -1,60 +1,108 @@
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 
-const About: React.FC = () => {
+interface AboutProps {
+  label: string;
+  title: string;
+  philosophy: string;
+  feature1Title: string;
+  feature1Desc: string;
+  feature2Title: string;
+  feature2Desc: string;
+  images: string[];
+}
+
+export const About: React.FC<AboutProps> = ({ 
+  label, 
+  title, 
+  philosophy, 
+  feature1Title, 
+  feature1Desc, 
+  feature2Title, 
+  feature2Desc, 
+  images 
+}) => {
+  const [currentImageIdx, setCurrentImageIdx] = useState(0);
+
+  // Auto-slide if multiple images
+  useEffect(() => {
+    if (images.length <= 1) return;
+    const interval = setInterval(() => {
+      setCurrentImageIdx((prev) => (prev + 1) % images.length);
+    }, 5000);
+    return () => clearInterval(interval);
+  }, [images.length]);
+
   return (
-    <section id="about" className="py-24 px-6 bg-white overflow-hidden">
-      <div className="max-w-7xl mx-auto">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-20 items-center">
-          <div className="relative">
-            <div className="aspect-[4/5] bg-gray-100 rounded-[2rem] overflow-hidden shadow-2xl relative z-10">
-               <img src="https://picsum.photos/seed/designer/800/1000" alt="Designer Profile" className="w-full h-full object-cover grayscale hover:grayscale-0 transition-all duration-1000" />
-            </div>
-            <div className="absolute -bottom-8 -right-8 w-48 h-48 bg-black rounded-3xl z-0 flex items-center justify-center p-8">
-              <span className="text-white text-center font-serif text-sm">Design with <br /> Heart & Logic</span>
-            </div>
-          </div>
-
-          <div className="space-y-10">
-            <div>
-              <h2 className="text-4xl md:text-5xl font-serif mb-8">
-                “로고는 예쁜 그림이 아니라,<br />브랜드의 약속입니다.”
-              </h2>
-              <p className="text-xl text-gray-600 leading-relaxed font-light italic">
-                저는 화려한 유행을 쫓기보다, 시간이 흘러도 변하지 않는 브랜드의 본질을 찾는 디자인을 추구합니다.
-              </p>
-            </div>
+    <section id="about" className="py-24 md:py-40 bg-ivory overflow-hidden">
+      <div className="max-w-7xl mx-auto px-6 grid md:grid-cols-2 gap-16 items-center">
+        <motion.div 
+          initial={{ opacity: 0, x: -50 }}
+          whileInView={{ opacity: 1, x: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 1 }}
+          className="relative group"
+        >
+          <div className="relative w-full h-[600px] overflow-hidden bg-earthy/5 shadow-2xl">
+            <AnimatePresence mode="wait">
+              <motion.img 
+                key={images[currentImageIdx] || 'placeholder'}
+                initial={{ opacity: 0, scale: 1.1 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.95 }}
+                transition={{ duration: 1.2, ease: "easeInOut" }}
+                src={images[currentImageIdx] || "https://images.unsplash.com/photo-1591336323062-8758837e283d?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80"} 
+                alt="Philosophy Visual"
+                className="w-full h-full object-cover"
+              />
+            </AnimatePresence>
             
-            <div className="space-y-6 text-gray-500 leading-relaxed">
-              <p>
-                10년 이상의 경력을 통해 대기업의 BI 리뉴얼부터 갓 시작한 1인 기업의 로고 디자인까지 
-                다양한 스펙트럼의 프로젝트를 수행해 왔습니다. 제가 중요하게 생각하는 가치는 '지속 가능성'입니다.
-              </p>
-              <p>
-                단순히 보기 좋은 디자인을 넘어, 인쇄물, 모바일 앱, 대형 간판 등 
-                실제 비즈니스 환경에서 가장 완벽하게 작동하는 아이덴티티를 만듭니다.
-              </p>
-            </div>
+            {/* Gallery Navigation Dots */}
+            {images.length > 1 && (
+              <div className="absolute bottom-6 left-1/2 -translate-x-1/2 flex space-x-2 z-20">
+                {images.map((_, idx) => (
+                  <button
+                    key={idx}
+                    onClick={() => setCurrentImageIdx(idx)}
+                    className={`w-1.5 h-1.5 rounded-full transition-all duration-500 ${idx === currentImageIdx ? 'bg-white w-4' : 'bg-white/40'}`}
+                  />
+                ))}
+              </div>
+            )}
+          </div>
+          
+          <div className="absolute -bottom-6 -right-6 w-48 h-48 bg-olive p-8 text-white hidden md:flex flex-col justify-end shadow-xl z-10">
+            <span className="text-4xl font-serif">100%</span>
+            <span className="text-xs tracking-widest uppercase mt-2">Sustainable Materials</span>
+          </div>
+        </motion.div>
 
-            <div className="flex gap-12 pt-4">
-              <div>
-                <span className="text-3xl font-serif block mb-1">10+</span>
-                <span className="text-xs font-bold uppercase tracking-widest text-gray-400">Experience</span>
-              </div>
-              <div>
-                <span className="text-3xl font-serif block mb-1">500+</span>
-                <span className="text-xs font-bold uppercase tracking-widest text-gray-400">Projects Done</span>
-              </div>
-              <div>
-                <span className="text-3xl font-serif block mb-1">99%</span>
-                <span className="text-xs font-bold uppercase tracking-widest text-gray-400">Client Satisfaction</span>
-              </div>
+        <motion.div 
+          initial={{ opacity: 0, x: 50 }}
+          whileInView={{ opacity: 1, x: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 1, delay: 0.2 }}
+        >
+          <h2 className="text-sm tracking-[0.3em] text-olive uppercase mb-6 font-semibold">{label}</h2>
+          <h3 className="text-4xl md:text-5xl font-serif mb-8 leading-snug whitespace-pre-line text-charcoal">
+            {title}
+          </h3>
+          <p className="text-charcoal/70 leading-loose mb-8 text-lg font-light whitespace-pre-line">
+            {philosophy}
+          </p>
+          <div className="grid grid-cols-2 gap-8 border-t border-olive/20 pt-8">
+            <div>
+              <h4 className="font-serif text-xl mb-2 text-olive">{feature1Title}</h4>
+              <p className="text-sm text-charcoal/60">{feature1Desc}</p>
+            </div>
+            <div>
+              <h4 className="font-serif text-xl mb-2 text-olive">{feature2Title}</h4>
+              <p className="text-sm text-charcoal/60">{feature2Desc}</p>
             </div>
           </div>
-        </div>
+        </motion.div>
       </div>
     </section>
   );
 };
-
-export default About;

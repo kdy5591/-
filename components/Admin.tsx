@@ -1,300 +1,343 @@
 
-import React, { useState } from 'react';
-import { Project } from '../types.ts';
+import React, { useRef, useState } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 
 interface AdminProps {
-  projects: Project[];
-  onUpdate: (projects: Project[]) => void;
+  content: {
+    heroTitle: string;
+    heroSlogan: string;
+    heroDescription: string;
+    heroImages: string[];
+    aboutLabel: string;
+    aboutTitle: string;
+    aboutPhilosophy: string;
+    aboutFeature1Title: string;
+    aboutFeature1Desc: string;
+    aboutFeature2Title: string;
+    aboutFeature2Desc: string;
+    aboutImages: string[];
+    sumiImage: string;
+    ttumImage: string;
+    minImage: string;
+    contactEmail: string;
+  };
+  setContent: React.Dispatch<React.SetStateAction<any>>;
   onClose: () => void;
 }
 
-const Admin: React.FC<AdminProps> = ({ projects, onUpdate, onClose }) => {
+export const Admin: React.FC<AdminProps> = ({ content, setContent, onClose }) => {
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [password, setPassword] = useState('');
-  const [isAuthorized, setIsAuthorized] = useState(false);
-  const [editingId, setEditingId] = useState<string | null>(null);
-  const [formData, setFormData] = useState<Partial<Project>>({});
-
-  const toBase64 = (file: File): Promise<string> => 
-    new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.readAsDataURL(file);
-      reader.onload = () => resolve(reader.result as string);
-      reader.onerror = error => reject(error);
-    });
-
-  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>, field: 'thumbnailUrl' | 'sketchUrl') => {
-    if (e.target.files && e.target.files[0]) {
-      const base64 = await toBase64(e.target.files[0]);
-      setFormData({ ...formData, [field]: base64 });
-    }
-  };
-
-  const handleMultipleFilesChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files) {
-      const filesArray = Array.from(e.target.files) as File[];
-      const base64s = await Promise.all(filesArray.map(file => toBase64(file)));
-      setFormData({ 
-        ...formData, 
-        imageUrls: [...(formData.imageUrls || []), ...base64s] 
-      });
-    }
-  };
-
-  const removeImageUrl = (index: number) => {
-    const newUrls = [...(formData.imageUrls || [])];
-    newUrls.splice(index, 1);
-    setFormData({ ...formData, imageUrls: newUrls });
-  };
+  const [error, setError] = useState(false);
+  
+  const aboutFileRef = useRef<HTMLInputElement>(null);
+  const heroFileRef = useRef<HTMLInputElement>(null);
+  const sumiFileRef = useRef<HTMLInputElement>(null);
+  const ttumFileRef = useRef<HTMLInputElement>(null);
+  const minFileRef = useRef<HTMLInputElement>(null);
 
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
-    if (password === '3066') {
-      setIsAuthorized(true);
+    if (password === '2408') {
+      setIsAuthenticated(true);
+      setError(false);
     } else {
-      alert('비밀번호가 틀렸습니다.');
+      setError(true);
+      setPassword('');
+      setTimeout(() => setError(false), 2000);
     }
   };
 
-  const handleEdit = (project: Project) => {
-    setEditingId(project.id);
-    setFormData(project);
+  const handleChange = (field: string, value: any) => {
+    setContent((prev: any) => ({ ...prev, [field]: value }));
   };
 
-  const handleAddNew = () => {
-    setEditingId('new');
-    setFormData({
-      brandName: '',
-      category: '',
-      keywords: [],
-      description: '',
-      background: '',
-      problem: '',
-      concept: '',
-      feedback: '',
-      isFeatured: false,
-      thumbnailUrl: '',
-      imageUrls: [],
-      sketchUrl: ''
-    });
-  };
-
-  const handleSave = () => {
-    if (editingId === 'new') {
-      const newProject = { 
-        ...formData, 
-        id: Date.now().toString() 
-      } as Project;
-      onUpdate([...projects, newProject]);
-    } else {
-      onUpdate(projects.map(p => p.id === editingId ? { ...p, ...formData } as Project : p));
-    }
-    setEditingId(null);
-  };
-
-  const handleDelete = (id: string) => {
-    if (window.confirm('정말 삭제하시겠습니까?')) {
-      onUpdate(projects.filter(p => p.id !== id));
+  const handleHeroImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const files = event.target.files;
+    if (files) {
+      const newImageUrls = Array.from(files).map((file: File) => URL.createObjectURL(file));
+      setContent((prev: any) => ({
+        ...prev,
+        heroImages: [...prev.heroImages, ...newImageUrls]
+      }));
     }
   };
 
-  if (!isAuthorized) {
+  const handleAboutImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const files = event.target.files;
+    if (files) {
+      const newImageUrls = Array.from(files).map((file: File) => URL.createObjectURL(file));
+      setContent((prev: any) => ({
+        ...prev,
+        aboutImages: [...prev.aboutImages, ...newImageUrls]
+      }));
+    }
+  };
+
+  const handleSingleImageUpload = (field: string, event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      handleChange(field, URL.createObjectURL(file));
+    }
+  };
+
+  const removeImage = (field: 'heroImages' | 'aboutImages', idx: number) => {
+    const updatedImages = (content[field] as string[]).filter((_, i) => i !== idx);
+    handleChange(field, updatedImages);
+  };
+
+  if (!isAuthenticated) {
     return (
-      <div className="fixed inset-0 z-[110] glass-morphism flex items-center justify-center p-6">
-        <div className="bg-white p-8 rounded-3xl shadow-2xl max-w-sm w-full border border-black/5">
-          <h2 className="text-2xl font-serif mb-6 text-center">Admin Access</h2>
-          <form onSubmit={handleLogin} className="space-y-4">
-            <input 
-              type="password" 
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              placeholder="Password" 
-              className="w-full border border-black/10 px-4 py-3 rounded-xl focus:outline-none focus:border-black"
-            />
-            <div className="flex gap-2">
-              <button type="submit" className="flex-1 bg-black text-white py-3 rounded-xl font-bold">로그인</button>
-              <button onClick={onClose} className="flex-1 border border-black/10 py-3 rounded-xl font-bold">닫기</button>
+      <section className="min-h-screen bg-ivory flex items-center justify-center px-6">
+        <motion.div 
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="max-w-md w-full bg-white p-12 shadow-2xl rounded-sm text-center"
+        >
+          <h2 className="text-2xl font-serif text-olive mb-2">관리자 접속</h2>
+          <p className="text-[10px] tracking-[0.3em] uppercase text-charcoal/40 mb-10">Restricted Access</p>
+          
+          <form onSubmit={handleLogin} className="space-y-6">
+            <div className="relative">
+              <input 
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="PASSWORD"
+                className={`w-full bg-ivory/50 border-b ${error ? 'border-red-400' : 'border-charcoal/10'} py-4 px-2 outline-none focus:border-olive transition-colors text-center tracking-[0.5em] text-sm`}
+                autoFocus
+              />
+              <AnimatePresence>
+                {error && (
+                  <motion.p 
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    className="absolute -bottom-6 left-0 w-full text-[9px] text-red-400 tracking-widest uppercase"
+                  >
+                    Incorrect Password
+                  </motion.p>
+                )}
+              </AnimatePresence>
+            </div>
+            <div className="pt-4 flex space-x-4">
+              <button 
+                type="button"
+                onClick={onClose}
+                className="flex-1 py-4 border border-charcoal/10 text-[10px] tracking-[0.3em] uppercase hover:bg-ivory transition-colors"
+              >
+                Cancel
+              </button>
+              <button 
+                type="submit"
+                className="flex-1 py-4 bg-olive text-white text-[10px] tracking-[0.3em] uppercase hover:bg-charcoal transition-colors shadow-lg"
+              >
+                Login
+              </button>
             </div>
           </form>
-        </div>
-      </div>
+        </motion.div>
+      </section>
     );
   }
 
   return (
-    <div className="fixed inset-0 z-[110] bg-white overflow-y-auto p-6 md:p-12">
-      <div className="max-w-5xl mx-auto pb-24">
-        <div className="flex justify-between items-center mb-12">
-          <h1 className="text-4xl font-serif">Project Management</h1>
-          <div className="flex gap-4">
-            <button onClick={handleAddNew} className="bg-black text-white px-6 py-2 rounded-full font-bold">Add New</button>
-            <button onClick={onClose} className="border border-black px-6 py-2 rounded-full font-bold">Close</button>
+    <section className="min-h-screen bg-ivory pt-32 pb-20 px-6">
+      <div className="max-w-4xl mx-auto">
+        <div className="flex justify-between items-center mb-12 border-b border-olive/20 pb-8">
+          <div>
+            <h2 className="text-3xl font-serif text-olive">관리자 대시보드</h2>
+            <p className="text-sm text-charcoal/60 tracking-widest uppercase mt-2">Content Management System</p>
+          </div>
+          <div className="flex space-x-4">
+            <button 
+              onClick={onClose}
+              className="px-6 py-2 bg-charcoal text-white text-[10px] tracking-[0.2em] uppercase hover:bg-olive transition-colors shadow-lg"
+            >
+              Save & Exit
+            </button>
           </div>
         </div>
 
-        {editingId ? (
-          <div className="bg-gray-50 p-8 rounded-3xl border border-black/5 space-y-10">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-              <div className="space-y-2">
-                <label className="text-xs font-bold uppercase tracking-widest text-gray-400">Brand Name</label>
-                <input 
-                  value={formData.brandName} 
-                  onChange={e => setFormData({...formData, brandName: e.target.value})}
-                  className="w-full p-4 rounded-xl border border-black/10"
-                />
-              </div>
-              <div className="space-y-2">
-                <label className="text-xs font-bold uppercase tracking-widest text-gray-400">Category</label>
-                <input 
-                  value={formData.category} 
-                  onChange={e => setFormData({...formData, category: e.target.value})}
-                  className="w-full p-4 rounded-xl border border-black/10"
-                />
-              </div>
-            </div>
-
-            <div className="space-y-8">
-              <h3 className="text-xl font-serif border-b pb-2">Media & Images</h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                <div className="space-y-4">
-                  <label className="text-xs font-bold uppercase tracking-widest text-gray-400 block">Thumbnail Image</label>
-                  <div className="aspect-square bg-white border border-dashed border-black/20 rounded-2xl overflow-hidden flex items-center justify-center relative group">
-                    {formData.thumbnailUrl ? (
-                      <img src={formData.thumbnailUrl} className="w-full h-full object-cover" />
-                    ) : (
-                      <span className="text-gray-400 text-sm">No Image</span>
-                    )}
-                    <input 
-                      type="file" 
-                      accept="image/*"
-                      onChange={e => handleFileChange(e, 'thumbnailUrl')}
-                      className="absolute inset-0 opacity-0 cursor-pointer"
-                    />
-                  </div>
-                </div>
-                <div className="space-y-4">
-                  <label className="text-xs font-bold uppercase tracking-widest text-gray-400 block">Process/Sketch Image</label>
-                  <div className="aspect-square bg-white border border-dashed border-black/20 rounded-2xl overflow-hidden flex items-center justify-center relative">
-                    {formData.sketchUrl ? (
-                      <img src={formData.sketchUrl} className="w-full h-full object-cover" />
-                    ) : (
-                      <span className="text-gray-400 text-sm">No Image</span>
-                    )}
-                    <input 
-                      type="file" 
-                      accept="image/*"
-                      onChange={e => handleFileChange(e, 'sketchUrl')}
-                      className="absolute inset-0 opacity-0 cursor-pointer"
-                    />
-                  </div>
-                </div>
-              </div>
-              <div className="space-y-4">
-                <label className="text-xs font-bold uppercase tracking-widest text-gray-400 block">Case Study Images (Multiple)</label>
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                  {formData.imageUrls?.map((url, idx) => (
-                    <div key={idx} className="aspect-square bg-white border rounded-xl overflow-hidden relative group">
-                      <img src={url} className="w-full h-full object-cover" />
-                      <button 
-                        onClick={() => removeImageUrl(idx)}
-                        className="absolute top-2 right-2 bg-red-500 text-white w-6 h-6 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
-                      >
-                        ×
-                      </button>
-                    </div>
-                  ))}
-                  <div className="aspect-square border-2 border-dashed border-black/10 rounded-xl flex items-center justify-center relative hover:bg-black/5 transition-colors">
-                    <span className="text-2xl text-gray-300">+</span>
-                    <input 
-                      type="file" 
-                      multiple 
-                      accept="image/*"
-                      onChange={handleMultipleFilesChange}
-                      className="absolute inset-0 opacity-0 cursor-pointer"
-                    />
-                  </div>
-                </div>
-              </div>
-            </div>
-
+        <div className="grid gap-10">
+          {/* Hero Section Editing */}
+          <div className="bg-white p-8 shadow-sm border border-olive/5 rounded-sm">
+            <h3 className="text-xs tracking-[0.3em] uppercase text-olive mb-6 font-bold border-l-2 border-olive pl-3">Hero Section</h3>
             <div className="space-y-6">
-              <h3 className="text-xl font-serif border-b pb-2">Content Detail</h3>
-              <textarea 
-                placeholder="Short Overview Description" 
-                value={formData.description} 
-                onChange={e => setFormData({...formData, description: e.target.value})}
-                className="w-full p-4 rounded-xl border border-black/10 h-24"
-              />
-              <textarea 
-                placeholder="Brand Background" 
-                value={formData.background} 
-                onChange={e => setFormData({...formData, background: e.target.value})}
-                className="w-full p-4 rounded-xl border border-black/10 h-32"
-              />
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <textarea 
-                  placeholder="Problem" 
-                  value={formData.problem} 
-                  onChange={e => setFormData({...formData, problem: e.target.value})}
-                  className="w-full p-4 rounded-xl border border-black/10 h-32"
-                />
-                <textarea 
-                  placeholder="Concept Detail" 
-                  value={formData.concept} 
-                  onChange={e => setFormData({...formData, concept: e.target.value})}
-                  className="w-full p-4 rounded-xl border border-black/10 h-32"
+              <div className="flex flex-col space-y-2">
+                <label className="text-[10px] tracking-[0.2em] uppercase text-charcoal/40">Slogan</label>
+                <input 
+                  type="text" 
+                  value={content.heroSlogan}
+                  onChange={(e) => handleChange('heroSlogan', e.target.value)}
+                  className="bg-ivory/20 border border-charcoal/10 p-3 outline-none focus:border-olive text-sm"
                 />
               </div>
-              <textarea 
-                placeholder="Client Feedback" 
-                value={formData.feedback} 
-                onChange={e => setFormData({...formData, feedback: e.target.value})}
-                className="w-full p-4 rounded-xl border border-black/10 h-24"
-              />
-            </div>
-
-            <div className="flex items-center gap-2 py-4">
-               <input 
-                type="checkbox" 
-                id="feat"
-                checked={formData.isFeatured} 
-                onChange={e => setFormData({...formData, isFeatured: e.target.checked})}
-                className="w-5 h-5 accent-black"
-               />
-               <label htmlFor="feat" className="font-bold">Display in Featured Section</label>
-            </div>
-
-            <div className="flex gap-4 pt-8 border-t border-black/10">
-              <button onClick={handleSave} className="flex-1 bg-black text-white py-4 rounded-xl font-bold text-lg">Save Project</button>
-              <button onClick={() => setEditingId(null)} className="flex-1 bg-gray-200 py-4 rounded-xl font-bold text-lg">Cancel</button>
-            </div>
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 gap-6">
-            {projects.map(p => (
-              <div key={p.id} className="flex items-center justify-between p-6 bg-gray-50 rounded-3xl border border-black/5 hover:border-black/20 transition-all">
-                <div className="flex items-center gap-6">
-                  <div className="w-20 h-20 rounded-2xl overflow-hidden border bg-white">
-                    <img src={p.thumbnailUrl || p.imageUrls?.[0]} className="w-full h-full object-cover" />
-                  </div>
-                  <div>
-                    <h3 className="text-xl font-bold">{p.brandName}</h3>
-                    <div className="flex items-center gap-2">
-                      <span className="text-xs text-gray-400 uppercase tracking-widest">{p.category}</span>
-                      {p.isFeatured && <span className="px-2 py-0.5 bg-black text-white text-[10px] rounded-full">FEATURED</span>}
-                    </div>
-                  </div>
-                </div>
-                <div className="flex gap-3">
-                  <button onClick={() => handleEdit(p)} className="px-6 py-2 border border-black rounded-full text-sm font-bold hover:bg-black hover:text-white transition-all">Edit</button>
-                  <button onClick={() => handleDelete(p.id)} className="px-6 py-2 bg-red-500 text-white rounded-full text-sm font-bold hover:bg-red-600 transition-all">Delete</button>
-                </div>
+              <div className="flex flex-col space-y-2">
+                <label className="text-[10px] tracking-[0.2em] uppercase text-charcoal/40">Main Title</label>
+                <textarea 
+                  rows={2}
+                  value={content.heroTitle}
+                  onChange={(e) => handleChange('heroTitle', e.target.value)}
+                  className="bg-ivory/20 border border-charcoal/10 p-3 outline-none focus:border-olive text-sm resize-none"
+                />
               </div>
-            ))}
+              
+              <div className="pt-4">
+                <label className="text-[10px] tracking-[0.2em] uppercase text-charcoal/40 block mb-4">Hero Slider Images</label>
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-4">
+                  <AnimatePresence>
+                    {content.heroImages.map((url, idx) => (
+                      <motion.div 
+                        key={url}
+                        initial={{ opacity: 0, scale: 0.8 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        exit={{ opacity: 0, scale: 0.8 }}
+                        className="relative aspect-square group overflow-hidden bg-ivory border border-charcoal/5"
+                      >
+                        <img src={url} alt={`Hero ${idx}`} className="w-full h-full object-cover" />
+                        <button 
+                          onClick={() => removeImage('heroImages', idx)}
+                          className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-white text-[10px] tracking-widest uppercase font-bold"
+                        >
+                          Remove
+                        </button>
+                      </motion.div>
+                    ))}
+                  </AnimatePresence>
+                  <button 
+                    onClick={() => heroFileRef.current?.click()}
+                    className="aspect-square border-2 border-dashed border-charcoal/10 flex flex-col items-center justify-center hover:border-olive/40 hover:bg-olive/5 transition-all group"
+                  >
+                    <span className="text-2xl text-charcoal/20 group-hover:text-olive/40 mb-1">+</span>
+                    <span className="text-[8px] tracking-[0.2em] uppercase text-charcoal/30 group-hover:text-olive/50">Add Slide</span>
+                  </button>
+                </div>
+                <input type="file" ref={heroFileRef} onChange={handleHeroImageUpload} multiple accept="image/*" className="hidden" />
+              </div>
+            </div>
           </div>
-        )}
+
+          {/* Persona Showcase Images */}
+          <div className="bg-white p-8 shadow-sm border border-olive/5 rounded-sm">
+            <h3 className="text-xs tracking-[0.3em] uppercase text-olive mb-6 font-bold border-l-2 border-olive pl-3">Persona Sections</h3>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+              {[
+                { name: 'Lee Sumi', field: 'sumiImage', ref: sumiFileRef },
+                { name: 'Ttumttumi', field: 'ttumImage', ref: ttumFileRef },
+                { name: 'Mindungi', field: 'minImage', ref: minFileRef }
+              ].map((item) => (
+                <div key={item.field} className="flex flex-col items-center">
+                  <span className="text-[10px] tracking-[0.2em] uppercase text-charcoal/40 mb-4">{item.name} Image</span>
+                  <div className="relative w-full aspect-[3/4] bg-ivory border border-charcoal/5 group overflow-hidden">
+                    <img src={(content as any)[item.field]} className="w-full h-full object-cover" alt={item.name} />
+                    <button 
+                      onClick={() => item.ref.current?.click()}
+                      className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-white text-[10px] tracking-widest uppercase"
+                    >
+                      Update
+                    </button>
+                  </div>
+                  <input 
+                    type="file" 
+                    ref={item.ref} 
+                    onChange={(e) => handleSingleImageUpload(item.field, e)} 
+                    accept="image/*" 
+                    className="hidden" 
+                  />
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Philosophy Section */}
+          <div className="bg-white p-8 shadow-sm border border-olive/5 rounded-sm">
+            <h3 className="text-xs tracking-[0.3em] uppercase text-olive mb-6 font-bold border-l-2 border-olive pl-3">Philosophy (About)</h3>
+            <div className="space-y-6">
+              <div className="flex flex-col space-y-2">
+                <label className="text-[10px] tracking-[0.2em] uppercase text-charcoal/40">Top Label</label>
+                <input 
+                  type="text" 
+                  value={content.aboutLabel}
+                  onChange={(e) => handleChange('aboutLabel', e.target.value)}
+                  className="bg-ivory/20 border border-charcoal/10 p-3 outline-none focus:border-olive text-sm"
+                />
+              </div>
+              <div className="flex flex-col space-y-2">
+                <label className="text-[10px] tracking-[0.2em] uppercase text-charcoal/40">Section Title</label>
+                <textarea 
+                  rows={2}
+                  value={content.aboutTitle}
+                  onChange={(e) => handleChange('aboutTitle', e.target.value)}
+                  className="bg-ivory/20 border border-charcoal/10 p-3 outline-none focus:border-olive text-sm resize-none"
+                />
+              </div>
+              <div className="flex flex-col space-y-2">
+                <label className="text-[10px] tracking-[0.2em] uppercase text-charcoal/40">Philosophy Description</label>
+                <textarea 
+                  rows={4}
+                  value={content.aboutPhilosophy}
+                  onChange={(e) => handleChange('aboutPhilosophy', e.target.value)}
+                  className="bg-ivory/20 border border-charcoal/10 p-3 outline-none focus:border-olive text-sm resize-none"
+                />
+              </div>
+
+              <div className="pt-8">
+                <label className="text-[10px] tracking-[0.2em] uppercase text-charcoal/40 block mb-4">Philosophy Gallery Images</label>
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-4">
+                  <AnimatePresence>
+                    {content.aboutImages.map((url, idx) => (
+                      <motion.div 
+                        key={url}
+                        initial={{ opacity: 0, scale: 0.8 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        exit={{ opacity: 0, scale: 0.8 }}
+                        className="relative aspect-square group overflow-hidden bg-ivory border border-charcoal/5"
+                      >
+                        <img src={url} alt={`About ${idx}`} className="w-full h-full object-cover" />
+                        <button 
+                          onClick={() => removeImage('aboutImages', idx)}
+                          className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-white text-[10px] tracking-widest uppercase font-bold"
+                        >
+                          Remove
+                        </button>
+                      </motion.div>
+                    ))}
+                  </AnimatePresence>
+                  <button 
+                    onClick={() => aboutFileRef.current?.click()}
+                    className="aspect-square border-2 border-dashed border-charcoal/10 flex flex-col items-center justify-center hover:border-olive/40 hover:bg-olive/5 transition-all group"
+                  >
+                    <span className="text-2xl text-charcoal/20 group-hover:text-olive/40 mb-1">+</span>
+                    <span className="text-[8px] tracking-[0.2em] uppercase text-charcoal/30 group-hover:text-olive/50">Add Image</span>
+                  </button>
+                </div>
+                <input type="file" ref={aboutFileRef} onChange={handleAboutImageUpload} multiple accept="image/*" className="hidden" />
+              </div>
+            </div>
+          </div>
+
+          {/* Contact Section Editing */}
+          <div className="bg-white p-8 shadow-sm border border-olive/5 rounded-sm">
+            <h3 className="text-xs tracking-[0.3em] uppercase text-olive mb-6 font-bold border-l-2 border-olive pl-3">Contact Info</h3>
+            <div className="space-y-6">
+              <div className="flex flex-col space-y-2">
+                <label className="text-[10px] tracking-[0.2em] uppercase text-charcoal/40">Display Email</label>
+                <input 
+                  type="email" 
+                  value={content.contactEmail}
+                  onChange={(e) => handleChange('contactEmail', e.target.value)}
+                  className="bg-ivory/20 border border-charcoal/10 p-3 outline-none focus:border-olive text-sm"
+                />
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div className="mt-12 text-center text-[10px] tracking-[0.4em] uppercase text-charcoal/30">
+          Admin Session Protected • Changes apply immediately to local view
+        </div>
       </div>
-    </div>
+    </section>
   );
 };
-
-export default Admin;
